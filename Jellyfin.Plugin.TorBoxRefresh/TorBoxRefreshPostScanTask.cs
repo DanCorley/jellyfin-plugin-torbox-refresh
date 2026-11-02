@@ -30,6 +30,8 @@ public sealed class TorBoxRefreshPostScanTask : ILibraryPostScanTask
 
         var result = await _service.RefreshAsync(cancellationToken).ConfigureAwait(false);
 
+        // A failed refresh, a 409/429 no-op and an unchanged mount all return
+        // changed == 0, so none of them queue a second scan.
         if (result.Changed > 0
             && Plugin.Instance?.Configuration?.QueueFollowUpScan == true)
         {
