@@ -40,7 +40,6 @@ See [docker-compose.example.yaml](docker-compose.example.yaml) for both services
 The default build targets Jellyfin **12.4.0** (`targetAbi` `12.4.0.0`) using the `Jellyfin.Controller` / `Jellyfin.Model` NuGet packages. That matches the current `linuxserver/jellyfin:latest` image.
 
 ```bash
-cd Jellyfin.Plugin.TorBoxRefresh
 dotnet build -c Release
 ```
 
@@ -56,8 +55,8 @@ The plugin has no third-party runtime dependencies, so copy only its DLL and man
 
 ```bash
 mkdir -p <jellyfin config>/plugins/TorBoxRefresh
-cp bin/Release/net10.0/Jellyfin.Plugin.TorBoxRefresh.dll <jellyfin config>/plugins/TorBoxRefresh/
-cp meta.json <jellyfin config>/plugins/TorBoxRefresh/
+cp Jellyfin.Plugin.TorBoxRefresh/bin/Release/net10.0/Jellyfin.Plugin.TorBoxRefresh.dll <jellyfin config>/plugins/TorBoxRefresh/
+cp Jellyfin.Plugin.TorBoxRefresh/meta.json <jellyfin config>/plugins/TorBoxRefresh/
 ```
 
 The resulting folder is:
