@@ -1,0 +1,35 @@
+name: media
+
+services:
+  torbox-media-center:
+    # Use your published image, or replace with a build context pointing at
+    # your TorBox Media Center checkout:
+    #   build:
+    #     context: ../torbox-media-center
+    #     dockerfile: dockerfile
+    image: ghcr.io/dancorley/torbox-media-center:latest
+    restart: always
+    volumes:
+      - ./torbox:/torbox
+    env_file:
+      - .env
+    environment:
+      # CONTROL_TOKEN is read from .env via env_file above.
+      CONTROL_ENABLED: "true"
+      CONTROL_HOST: "0.0.0.0"
+      CONTROL_PORT: "8787"
+      CONTROL_MIN_INTERVAL: "60"
+    expose:
+      - "8787"
+
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    restart: always
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./jellyfin-config:/config
+      - ./jellyfin-plugins/TorBoxRefresh:/config/plugins/TorBoxRefresh
+      - ./torbox:/media/torbox:ro
+    # Plugin settings (Refresh URL, token, timeout, cooldown) are entered in
+    # Jellyfin under Dashboard -> Plugins -> TorBox Refresh, not here.

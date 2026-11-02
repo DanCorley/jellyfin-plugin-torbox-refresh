@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TorBox Refresh</title>
+</head>
+<body>
+    <div id="torBoxRefreshConfigPage" data-role="page" class="page type-interior pluginConfigurationPage configPage" data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>TorBox Refresh</h1>
+                <form class="configForm">
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="enabled" />
+                        <span>Refresh the TorBox mount when Jellyfin scans the library</span>
+                    </label>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="refreshUrl" label="Refresh URL" />
+                        <div class="fieldDescription">For example http://torbox-media-center:8787/refresh</div>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" id="token" label="Control token" />
+                        <div class="fieldDescription">Must match CONTROL_TOKEN on the TorBox Media Center container.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="timeoutSeconds" min="1" label="Request timeout (seconds)" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="cooldownSeconds" min="0" label="Cooldown (seconds)" />
+                        <div class="fieldDescription">Minimum time between refreshes triggered by scans.</div>
+                    </div>
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="queueFollowUpScan" />
+                        <span>Queue a follow-up scan when the mount changed</span>
+                    </label>
+                    <br />
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TorBoxRefreshConfig = {
+                pluginId: "a7c2f0e4-6b1d-4f3a-9c8e-2d5b7a1e4f60"
+            };
+
+            document.querySelector('.configPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TorBoxRefreshConfig.pluginId).then(function (config) {
+                        document.querySelector('#enabled').checked = config.Enabled;
+                        document.querySelector('#queueFollowUpScan').checked = config.QueueFollowUpScan;
+
+                        var refreshUrl = document.querySelector('#refreshUrl');
+                        refreshUrl.value = config.RefreshUrl || '';
+                        refreshUrl.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+
+                        var token = document.querySelector('#token');
+                        token.value = config.Token || '';
+                        token.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+
+                        var timeoutSeconds = document.querySelector('#timeoutSeconds');
+                        timeoutSeconds.value = config.TimeoutSeconds;
+                        timeoutSeconds.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+
+                        var cooldownSeconds = document.querySelector('#cooldownSeconds');
+                        cooldownSeconds.value = config.CooldownSeconds;
+                        cooldownSeconds.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('.configForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(TorBoxRefreshConfig.pluginId).then(function (config) {
+                        config.Enabled = document.querySelector('#enabled').checked;
+                        config.RefreshUrl = document.querySelector('#refreshUrl').value;
+                        config.Token = document.querySelector('#token').value;
+                        config.TimeoutSeconds = parseInt(document.querySelector('#timeoutSeconds').value, 10) || 120;
+                        config.CooldownSeconds = parseInt(document.querySelector('#cooldownSeconds').value, 10) || 0;
+                        config.QueueFollowUpScan = document.querySelector('#queueFollowUpScan').checked;
+
+                        ApiClient.updatePluginConfiguration(TorBoxRefreshConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                    });
+
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>

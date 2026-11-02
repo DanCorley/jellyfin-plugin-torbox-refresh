@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Jellyfin.Plugin.TorBoxRefresh</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.TorBoxRefresh</RootNamespace>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <JellyfinRepo Condition="'$(JellyfinRepo)' == ''"></JellyfinRepo>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(JellyfinRepo)/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
+    <ProjectReference Include="$(JellyfinRepo)/MediaBrowser.Controller/MediaBrowser.Controller.csproj" Private="false" />
+    <ProjectReference Include="$(JellyfinRepo)/MediaBrowser.Model/MediaBrowser.Model.csproj" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(JellyfinRepo)/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
+    <PackageReference Include="Jellyfin.Controller" Version="12.4.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="12.4.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration/configPage.html" />
+    <None Include="meta.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

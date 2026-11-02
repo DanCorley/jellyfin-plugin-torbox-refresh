@@ -1,0 +1,17 @@
+{
+  "guid": "a7c2f0e4-6b1d-4f3a-9c8e-2d5b7a1e4f60",
+  "name": "TorBox Refresh",
+  "description": "Refreshes the TorBox mount when Jellyfin scans the library.",
+  "overview": "Calls the TorBox Media Center control API after a library scan and queues a follow-up scan when the mount changed.",
+  "owner": "TorBox Media Center",
+  "category": "Library",
+  "version": "1.0.0.0",
+  "targetAbi": "12.4.0.0",
+  "changelog": "Initial release.",
+  "timestamp": "2026-11-01T00:00:00Z",
+  "status": "Active",
+  "autoUpdate": false,
+  "assemblies": [
+    "Jellyfin.Plugin.TorBoxRefresh.dll"
+  ]
+}
