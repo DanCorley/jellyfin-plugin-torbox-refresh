@@ -54,12 +54,16 @@ dotnet build -c Release -p:JellyfinRepo=/path/to/jellyfin
 In Jellyfin, open **Dashboard -> Plugins -> Repositories**, add:
 
 ```text
-https://dancorley.github.io/jellyfin-plugin-torbox-refresh/manifest.json
+https://raw.githubusercontent.com/DanCorley/jellyfin-plugin-torbox-refresh/main/docs/manifest.json
 ```
 
 Then install **TorBox Refresh** from the Catalog. If you already side-loaded the
 plugin, remove the manual `TorBoxRefresh` plugin folder first so Jellyfin does
 not see two copies with the same GUID.
+
+> The GitHub Pages site exists, but the account-level `dancorley.com` custom
+> domain currently catches project Pages paths. The raw URL above is the
+> reliable manifest URL until a dedicated Pages subdomain is configured.
 
 ## Install manually
 
