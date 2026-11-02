@@ -59,17 +59,17 @@ maintainable, distributable plugin.
 - [ ] Keep `QueueFollowUpScan=true` as the default; document the two-scan behavior.
 - [ ] Add a config schema version if the saved XML ever changes.
 - [ ] Document that the token is stored in Jellyfin's plugin XML and protect the config directory.
-- [ ] Package a zip with the DLL and `meta.json` at the archive root.
-- [ ] Generate a SHA-256 checksum for each release zip.
+- [x] Package a zip with the DLL and `meta.json` at the archive root.
+- [ ] Generate Jellyfin's expected MD5 checksum (uppercase hex) for each release zip.
 
 ## Distribution
 
-- [ ] Create a plugin repository manifest (`manifest.json`) on GitHub Pages or another static host.
-- [ ] Add the plugin repository URL to the README so users can install through Jellyfin.
-- [ ] Publish release zips as GitHub Release assets.
+- [x] Create a plugin repository manifest (`manifest.json`) on GitHub Pages or another static host.
+- [x] Add the plugin repository URL to the README so users can install through Jellyfin.
+- [x] Publish release zips as GitHub Release assets.
 - [ ] Update the manifest automatically on each plugin release.
 - [ ] Add a plugin icon/image URL for the catalog.
-- [ ] Keep the plugin GUID stable:
+- [x] Keep the plugin GUID stable:
 
   `a7c2f0e4-6b1d-4f3a-9c8e-2d5b7a1e4f60`
 

@@ -49,7 +49,19 @@ If you run a different Jellyfin ABI (for example a local 13.x build), change `ta
 dotnet build -c Release -p:JellyfinRepo=/path/to/jellyfin
 ```
 
-## Install
+## Install from the Jellyfin plugin repository
+
+In Jellyfin, open **Dashboard -> Plugins -> Repositories**, add:
+
+```text
+https://dancorley.github.io/jellyfin-plugin-torbox-refresh/manifest.json
+```
+
+Then install **TorBox Refresh** from the Catalog. If you already side-loaded the
+plugin, remove the manual `TorBoxRefresh` plugin folder first so Jellyfin does
+not see two copies with the same GUID.
+
+## Install manually
 
 The plugin has no third-party runtime dependencies, so copy only its DLL and manifest into the Jellyfin plugins folder:
 
