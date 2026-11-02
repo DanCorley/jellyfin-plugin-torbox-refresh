@@ -1,0 +1,102 @@
+name: Plugin smoke
+
+# Builds the plugin, then asks a real Jellyfin 12.4 server to load it. The log
+# assertion is the contract: Jellyfin 12.4 logs `Loaded plugin: TorBox Refresh
+# <version>` once the plugin assembly and meta.json are accepted. Older
+# Jellyfin releases quote the name (`Loaded plugin: "TorBox Refresh"`), so the
+# check accepts both spellings.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Jellyfin.Plugin.TorBoxRefresh/**"
+      - "Jellyfin.Plugin.TorBoxRefresh.Tests/**"
+      - "Jellyfin.Plugin.TorBoxRefresh.sln"
+      - "scripts/package.sh"
+      - ".github/workflows/smoke.yml"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  # The official image publishes major.minor tags; 12.4 is the ABI under test.
+  JELLYFIN_IMAGE: jellyfin/jellyfin:12.4
+
+jobs:
+  jellyfin-load:
+    name: Jellyfin 12.4 loads the plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Test
+        run: dotnet test -c Release
+
+      - name: Build and package
+        id: package
+        run: |
+          ./scripts/package.sh \
+            --version 0.0.0.0 \
+            --target-abi 12.4.0.0 \
+            --jellyfin-version 12.4.0 \
+            --output "$RUNNER_TEMP/dist"
+
+      - name: Stage plugin in a fresh Jellyfin config
+        env:
+          ZIP_PATH: ${{ steps.package.outputs.zip_path }}
+        run: |
+          config_dir="$RUNNER_TEMP/jellyfin-config"
+          # The official image uses /config as its program data path, so
+          # Jellyfin 12.x loads plugins from /config/plugins.
+          mkdir -p "$config_dir/plugins/TorBoxRefresh"
+          unzip -q "$ZIP_PATH" -d "$config_dir/plugins/TorBoxRefresh"
+          chmod -R a+rwX "$config_dir"
+          echo "CONFIG_DIR=$config_dir" >> "$GITHUB_ENV"
+          unzip -l "$ZIP_PATH"
+
+      - name: Start Jellyfin
+        run: |
+          docker run --detach --name jellyfin-smoke \
+            --volume "$CONFIG_DIR:/config" \
+            "$JELLYFIN_IMAGE"
+
+      - name: Wait for Jellyfin to load the plugin
+        run: |
+          deadline=$((SECONDS + 300))
+          while (( SECONDS < deadline )); do
+            logs="$(docker logs jellyfin-smoke 2>&1 || true)"
+            if grep -Eq 'Loaded plugin: "?TorBox Refresh' <<<"$logs"; then
+              echo "Plugin loaded:"
+              grep -E 'Loaded plugin: "?TorBox Refresh' <<<"$logs"
+              exit 0
+            fi
+
+            if [[ "$(docker inspect -f '{{.State.Running}}' jellyfin-smoke 2>/dev/null || echo false)" != "true" ]]; then
+              echo "::error::Jellyfin container exited before loading the plugin."
+              break
+            fi
+
+            sleep 5
+          done
+
+          echo "::error::Timed out waiting for 'Loaded plugin: \"TorBox Refresh\"'."
+          docker logs jellyfin-smoke 2>&1 | tail -300
+          exit 1
+
+      - name: Show Jellyfin logs on failure
+        if: failure()
+        run: docker logs jellyfin-smoke 2>&1 | tail -400
+
+      - name: Stop Jellyfin
+        if: always()
+        run: docker rm -f jellyfin-smoke >/dev/null 2>&1 || true

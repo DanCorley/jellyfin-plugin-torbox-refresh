@@ -29,20 +29,39 @@ public sealed class TorBoxRefreshService
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TorBoxRefreshService> _logger;
+    private readonly Func<PluginConfiguration?> _configurationAccessor;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private DateTime _lastAttemptUtc = DateTime.MinValue;
 
     public TorBoxRefreshService(
         IHttpClientFactory httpClientFactory,
         ILogger<TorBoxRefreshService> logger)
+        : this(httpClientFactory, logger, static () => Plugin.Instance?.Configuration)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TorBoxRefreshService"/> class
+    /// with an explicit configuration source. This is a test seam: production
+    /// resolves the two-argument constructor and keeps reading
+    /// <see cref="Plugin.Instance"/>.
+    /// </summary>
+    /// <param name="httpClientFactory">Factory used to create the HTTP client.</param>
+    /// <param name="logger">Logger for refresh diagnostics.</param>
+    /// <param name="configurationAccessor">Supplies the plugin configuration.</param>
+    public TorBoxRefreshService(
+        IHttpClientFactory httpClientFactory,
+        ILogger<TorBoxRefreshService> logger,
+        Func<PluginConfiguration?> configurationAccessor)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _configurationAccessor = configurationAccessor;
     }
 
     public async Task<RefreshResult> RefreshAsync(CancellationToken cancellationToken)
     {
-        var config = Plugin.Instance?.Configuration;
+        var config = _configurationAccessor();
         if (config is null
             || !config.Enabled
             || string.IsNullOrWhiteSpace(config.RefreshUrl)

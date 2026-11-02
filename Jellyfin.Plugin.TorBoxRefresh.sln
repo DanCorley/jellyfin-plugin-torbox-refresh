@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TorBoxRefresh", "Jellyfin.Plugin.TorBoxRefresh\Jellyfin.Plugin.TorBoxRefresh.csproj", "{3DB91650-925B-4917-9727-997FE8A0DBFC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TorBoxRefresh.Tests", "Jellyfin.Plugin.TorBoxRefresh.Tests\Jellyfin.Plugin.TorBoxRefresh.Tests.csproj", "{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{3DB91650-925B-4917-9727-997FE8A0DBFC}.Release|x64.Build.0 = Release|Any CPU
 		{3DB91650-925B-4917-9727-997FE8A0DBFC}.Release|x86.ActiveCfg = Release|Any CPU
 		{3DB91650-925B-4917-9727-997FE8A0DBFC}.Release|x86.Build.0 = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|x64.Build.0 = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Debug|x86.Build.0 = Debug|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|x64.ActiveCfg = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|x64.Build.0 = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|x86.ActiveCfg = Release|Any CPU
+		{FF5F6540-FB54-4D06-A27C-8156BE7AA9EE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
