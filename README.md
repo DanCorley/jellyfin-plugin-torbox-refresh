@@ -61,9 +61,9 @@ Then install **TorBox Refresh** from the Catalog. If you already side-loaded the
 plugin, remove the manual `TorBoxRefresh` plugin folder first so Jellyfin does
 not see two copies with the same GUID.
 
-> The GitHub Pages site exists, but the account-level `dancorley.com` custom
-> domain currently catches project Pages paths. The raw URL above is the
-> reliable manifest URL until a dedicated Pages subdomain is configured.
+> This repository uses the raw GitHub URL because the account-level
+> `dancorley.com` custom domain catches GitHub Pages project paths. If a
+> dedicated Pages subdomain is configured later, switch to that URL.
 
 ## Install manually
 

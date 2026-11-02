@@ -69,7 +69,7 @@ maintainable, distributable plugin.
 - [x] Publish release zips as GitHub Release assets.
 - [ ] Update the manifest automatically on each plugin release.
 - [ ] Add a plugin icon/image URL for the catalog.
-- [ ] Configure a dedicated Pages subdomain (e.g. `torbox-plugin.dancorley.com`) or keep using the raw GitHub manifest URL; the account-level `dancorley.com` custom domain currently catches project Pages paths.
+- [ ] Optionally enable a dedicated Pages subdomain (e.g. `torbox-plugin.dancorley.com`); Pages is currently disabled and the raw GitHub manifest URL is canonical because the account-level `dancorley.com` custom domain catches project Pages paths.
 - [x] Keep the plugin GUID stable:
 
   `a7c2f0e4-6b1d-4f3a-9c8e-2d5b7a1e4f60`
