@@ -1,0 +1,150 @@
+name: Release
+
+# Tag pushes such as v1.1.0 or v1.1.0.0 create a GitHub Release with the
+# plugin zip. The manifest update is attempted after the release, but direct
+# pushes to main may be blocked by branch protection. In that case the release
+# still succeeds and the manual step is printed in the job summary:
+#
+#   python3 scripts/update-manifest.py \
+#     --version <plugin version> \
+#     --target-abi 12.4.0.0 \
+#     --source-url <release zip URL> \
+#     --checksum <uppercase MD5> \
+#     --timestamp <ISO 8601 timestamp> \
+#     --changelog "<release notes>"
+#
+# then open a pull request for docs/manifest.json.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  JELLYFIN_VERSION: "12.4.0"
+  TARGET_ABI: "12.4.0.0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Derive plugin version
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' must look like v1.2.3 or v1.2.3.4"
+            exit 1
+          fi
+          if [[ "$version" != *.*.*.* ]]; then
+            version="$version.0"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build and package
+        id: package
+        run: |
+          ./scripts/package.sh \
+            --version "${{ steps.version.outputs.version }}" \
+            --target-abi "$TARGET_ABI" \
+            --jellyfin-version "$JELLYFIN_VERSION" \
+            --output dist
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ZIP_PATH: ${{ steps.package.outputs.zip_path }}
+          CHECKSUM: ${{ steps.package.outputs.md5 }}
+        run: |
+          changelog="$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")"
+          if [[ -z "$changelog" ]]; then
+            changelog="TorBox Refresh $GITHUB_REF_NAME"
+          fi
+
+          notes="$changelog
+
+          - Jellyfin ABI: $TARGET_ABI
+          - MD5: $CHECKSUM (Jellyfin manifest checksum)"
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP_PATH" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ZIP_PATH" \
+              --title "TorBox Refresh $GITHUB_REF_NAME" \
+              --notes "$notes"
+          fi
+
+      - name: Update plugin manifest
+        id: manifest
+        continue-on-error: true
+        env:
+          ZIP_NAME: ${{ steps.package.outputs.zip_path }}
+          CHECKSUM: ${{ steps.package.outputs.md5 }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Base the manifest on the latest main rather than the tagged commit.
+          git fetch origin main
+          git checkout -B main origin/main
+
+          changelog="$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")"
+          if [[ -z "$changelog" ]]; then
+            changelog="Release $GITHUB_REF_NAME."
+          fi
+
+          python3 scripts/update-manifest.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --target-abi "$TARGET_ABI" \
+            --source-url "${{ github.server_url }}/${{ github.repository }}/releases/download/$GITHUB_REF_NAME/$(basename "$ZIP_NAME")" \
+            --checksum "$CHECKSUM" \
+            --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --changelog "$changelog"
+
+          if git diff --quiet -- docs/manifest.json; then
+            echo "Manifest already up to date."
+            exit 0
+          fi
+
+          git add docs/manifest.json
+          git commit -m "release: add TorBox Refresh ${{ steps.version.outputs.version }} to manifest"
+          git push origin main
+
+      - name: Manual manifest step
+        if: steps.manifest.outcome == 'failure'
+        env:
+          CHECKSUM: ${{ steps.package.outputs.md5 }}
+        run: |
+          echo "::warning::docs/manifest.json was not updated automatically. Branch protection likely blocked the direct push; open a PR with the manifest change."
+          {
+            echo "## Manual manifest update required"
+            echo
+            echo "The release was published, but the direct push to \`main\` failed (branch protection)."
+            echo "Run this from a branch, then open a pull request:"
+            echo
+            echo '```bash'
+            echo "python3 scripts/update-manifest.py \\"
+            echo "  --version ${{ steps.version.outputs.version }} \\"
+            echo "  --target-abi $TARGET_ABI \\"
+            echo "  --source-url ${{ github.server_url }}/${{ github.repository }}/releases/download/$GITHUB_REF_NAME/$(basename "${{ steps.package.outputs.zip_path }}") \\"
+            echo "  --checksum $CHECKSUM \\"
+            echo "  --timestamp $(date -u +%Y-%m-%dT%H:%M:%SZ) \\"
+            echo "  --changelog \"Release $GITHUB_REF_NAME.\""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

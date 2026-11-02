@@ -6,6 +6,9 @@
     <AssemblyName>Jellyfin.Plugin.TorBoxRefresh</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.TorBoxRefresh</RootNamespace>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Default Jellyfin ABI for the NuGet build. Override with -p:JellyfinVersion=13.0.0
+         once the matching Jellyfin.Controller/Jellyfin.Model packages are published. -->
+    <JellyfinVersion Condition="'$(JellyfinVersion)' == ''">12.4.0</JellyfinVersion>
     <JellyfinRepo Condition="'$(JellyfinRepo)' == ''"></JellyfinRepo>
   </PropertyGroup>
 
@@ -15,8 +18,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="!Exists('$(JellyfinRepo)/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
-    <PackageReference Include="Jellyfin.Controller" Version="12.4.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Jellyfin.Model" Version="12.4.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,94 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  build:
+    name: build (Jellyfin ${{ matrix.jellyfin }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - jellyfin: "12.4.0"
+            targetAbi: "12.4.0.0"
+          # TODO(PLG-H-2, PLG-H-4): add the Jellyfin 13.x build once the
+          # Jellyfin.Controller and Jellyfin.Model 13.x NuGet packages exist.
+          # As of 2026-11-02 the newest published version on nuget.org is
+          # 12.4.0, so adding this entry now would fail restore.
+          #
+          # - jellyfin: "13.0.0"
+          #   targetAbi: "13.0.0.0"
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore -p:JellyfinVersion=${{ matrix.jellyfin }}
+
+      - name: Build
+        run: dotnet build -c Release --no-restore -p:JellyfinVersion=${{ matrix.jellyfin }}
+
+      - name: Package smoke test
+        id: package
+        run: |
+          ./scripts/package.sh \
+            --version 0.0.0.0 \
+            --target-abi "${{ matrix.targetAbi }}" \
+            --jellyfin-version "${{ matrix.jellyfin }}" \
+            --output "$RUNNER_TEMP/dist"
+
+      - name: Verify archive
+        env:
+          ZIP_PATH: ${{ steps.package.outputs.zip_path }}
+          TARGET_ABI: ${{ matrix.targetAbi }}
+        run: |
+          unzip -l "$ZIP_PATH"
+
+          entries="$(unzip -Z1 "$ZIP_PATH" | sort)"
+          expected=$'Jellyfin.Plugin.TorBoxRefresh.dll\nmeta.json'
+          if [[ "$entries" != "$expected" ]]; then
+            echo "Unexpected archive contents:" >&2
+            printf '%s\n' "$entries" >&2
+            exit 1
+          fi
+
+          python3 - "$ZIP_PATH" "$TARGET_ABI" <<'PY'
+          import json
+          import sys
+          import zipfile
+
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              meta = json.loads(archive.read("meta.json"))
+
+          if meta["targetAbi"] != sys.argv[2]:
+              raise SystemExit(
+                  f"targetAbi mismatch: {meta['targetAbi']} != {sys.argv[2]}"
+              )
+          PY
+
+      - name: Record ABI matrix
+        run: |
+          {
+            echo "### Jellyfin ABI build"
+            echo
+            echo "- Built ABI: \`${{ matrix.targetAbi }}\`"
+            echo "- 13.x: not built. The 13.x NuGet packages are not published yet."
+          } >> "$GITHUB_STEP_SUMMARY"
